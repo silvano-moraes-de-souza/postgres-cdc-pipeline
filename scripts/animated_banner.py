@@ -447,11 +447,47 @@ def scene_days(a: str, done: int = 3) -> str:
     return "".join(out)
 
 
+def _cylinder(x: int, y: int, label: str, a: str) -> str:
+    return (
+        f'<path d="M{x} {y} v70 a40 12 0 0 0 80 0 v-70" fill="#161b22" stroke="{a}" stroke-width="2"/>'
+        f'<ellipse cx="{x + 40}" cy="{y}" rx="40" ry="12" fill="#1b2430" stroke="{a}" stroke-width="2"/>'
+        f'<text x="{x + 40}" y="{y + 48}" text-anchor="middle" class="mono" font-size="13" fill="#e6edf3">{label}</text>'
+    )
+
+
+def scene_cdc(a: str) -> str:
+    """Change events stream from a source database to a replica; method scoreboard below."""
+    out = [_cylinder(858, 62, "shop", a), _cylinder(1150, 62, "rep", a),
+           f'<line x1="946" y1="100" x2="1142" y2="100" stroke="{a}" stroke-opacity=".5" stroke-width="2" class="flow"/>',
+           '<text x="1044" y="150" text-anchor="middle" class="mono" font-size="11" fill="#8b949e">WAL · pgoutput</text>',
+           '<clipPath id="tape"><rect x="946" y="84" width="196" height="34"/></clipPath>']  # fmt: skip
+    ops = [("I", "#3fb950"), ("U", a), ("U", a), ("D", "#f85149"), ("C", "#8b949e"), ("I", "#3fb950"),
+           ("U", a), ("D", "#f85149"), ("C", "#8b949e")]  # fmt: skip
+    tiles = "".join(
+        f'<rect x="{900 + i * 34}" y="88" width="26" height="26" rx="5" fill="{c}" fill-opacity=".9"/>'
+        f'<text x="{913 + i * 34}" y="106" text-anchor="middle" class="mono" font-size="13" '
+        f'font-weight="700" fill="#0b1016">{op}</text>'
+        for i, (op, c) in enumerate(ops)
+    )
+    out.append(f'<g clip-path="url(#tape)"><g>{tiles}<animateTransform attributeName="transform" '
+               'type="translate" values="0 0; 102 0" dur="2.4s" repeatCount="indefinite"/></g></g>')  # fmt: skip
+    board = [("watermark", False), ("trigger_seq", False), ("trigger_queue", True), ("wal", True)]
+    for i, (name, ok) in enumerate(board):
+        x = 858 + (i % 2) * 190
+        y = 196 + (i // 2) * 44
+        mark, color = ("✓ exact", "#3fb950") if ok else ("✕ drifts", "#f85149")
+        out.append(f'<g class="fade d{i + 3}"><rect x="{x}" y="{y}" width="180" height="34" rx="9" '
+                   f'fill="#161b22" stroke="{color}" stroke-opacity=".6"/><text x="{x + 12}" y="{y + 22}" '
+                   f'class="mono" font-size="13" fill="#e6edf3">{name}</text><text x="{x + 168}" y="{y + 22}" '
+                   f'text-anchor="end" class="mono" font-size="12" font-weight="700" fill="{color}">{mark}</text></g>')  # fmt: skip
+    return "".join(out)
+
+
 SCENES = {
     "flow": scene_flow, "dashboard": scene_dashboard, "route": scene_route,
     "resume": scene_resume, "workflow": scene_workflow, "bi": scene_bi, "video": scene_video,
     "site": scene_site, "rows": scene_rows, "star": scene_star, "checks": scene_checks,
-    "terminal": scene_terminal, "days": scene_days,
+    "terminal": scene_terminal, "days": scene_days, "cdc": scene_cdc,
 }  # fmt: skip
 
 

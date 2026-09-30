@@ -1,8 +1,25 @@
 services:
+  db:
+    image: postgres:16-alpine
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=4"]
+    environment:
+      POSTGRES_USER: cdc
+      POSTGRES_PASSWORD: cdc
+    volumes:
+      - ./docker/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cdc -d cdc_target"]
+      interval: 3s
+      retries: 20
+
   app:
     build: .
-    env_file:
-      - path: .env
-        required: false
-    volumes:
-      - ./data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SOURCE_URL: postgresql://cdc:cdc@db:5432/cdc_source
+      TARGET_URL: postgresql://cdc:cdc@db:5432/cdc_target
+    command: >
+      sh -c "cdc-pipeline generate --scale 0.05 --out /tmp/sf &&
+             cdc-pipeline compare --data /tmp/sf --cycles 8"
