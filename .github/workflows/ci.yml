@@ -19,7 +19,7 @@ jobs:
     env:
       TEST_DATABASE_URL: postgresql://ci:ci@localhost:5432/postgres
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Not a service container: services cannot pass -c wal_level=logical.
       - name: PostgreSQL 16 with logical WAL
         run: |
@@ -38,7 +38,7 @@ jobs:
   compose-e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker compose build
       - run: docker compose run --rm app
       - if: always()
