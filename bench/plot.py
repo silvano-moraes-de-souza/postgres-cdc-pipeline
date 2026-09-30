@@ -35,7 +35,7 @@ def _value(case: dict, metric: str) -> float:
 
 
 def _fmt(v: float) -> str:
-    if v >= 1000:
+    if v >= 1000 or (v >= 10 and v.is_integer()):
         return f"{v:,.0f}"
     if v >= 10:
         return f"{v:.1f}"
