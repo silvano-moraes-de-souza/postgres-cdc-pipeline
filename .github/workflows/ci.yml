@@ -26,7 +26,7 @@ jobs:
           docker run -d --name pg -p 5432:5432 -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci \
             postgres:16-alpine -c wal_level=logical -c max_replication_slots=4
           for i in $(seq 30); do docker exec pg pg_isready -U ci && break; sleep 1; done
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python }}
           enable-cache: true
